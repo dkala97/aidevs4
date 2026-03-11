@@ -240,6 +240,8 @@ def main():
 
     print("4. Odpowiedź do wysłania:")
     print(json.dumps(answer, ensure_ascii=False, indent=2))
+    with open("solution.json", "w") as f:
+        json.dump(answer, f, ensure_ascii=False, indent=2)
     print()
 
     print(f"5. Wysyłanie do {HUB_URL}/verify (task={TASK_NAME})...")
