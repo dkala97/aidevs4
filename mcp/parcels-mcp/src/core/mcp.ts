@@ -1,10 +1,13 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { SetLevelRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { config } from '../config/env.js';
-import { getLowLevelServer } from '../shared/mcp/server-internals.js';
-import { type ContextResolver, registerTools } from '../shared/tools/registry.js';
-import { logger } from '../shared/utils/logger.js';
-import { buildCapabilities } from './capabilities.js';
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { SetLevelRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { config } from "../config/env.js";
+import { getLowLevelServer } from "../shared/mcp/server-internals.js";
+import {
+  type ContextResolver,
+  registerTools,
+} from "../shared/tools/registry.js";
+import { logger } from "../shared/utils/logger.js";
+import { buildCapabilities } from "./capabilities.js";
 
 export interface ServerOptions {
   name: string;
@@ -31,7 +34,8 @@ export interface ServerOptions {
 }
 
 export function buildServer(options: ServerOptions): McpServer {
-  const { name, version, instructions, oninitialized, contextResolver } = options;
+  const { name, version, instructions, oninitialized, contextResolver } =
+    options;
 
   const server = new McpServer(
     { name, version },
@@ -46,8 +50,9 @@ export function buildServer(options: ServerOptions): McpServer {
   const lowLevel = getLowLevelServer(server);
   if (oninitialized) {
     lowLevel.oninitialized = () => {
-      logger.info('mcp', {
-        message: 'Client initialization complete (notifications/initialized received)',
+      logger.info("mcp", {
+        message:
+          "Client initialization complete (notifications/initialized received)",
         clientVersion: lowLevel.getClientVersion?.(),
       });
       oninitialized();
@@ -60,7 +65,7 @@ export function buildServer(options: ServerOptions): McpServer {
   // Register logging/setLevel handler (required when logging capability is advertised)
   server.server.setRequestHandler(SetLevelRequestSchema, async (request) => {
     const level = request.params.level;
-    logger.info('mcp', { message: 'Log level changed', level });
+    logger.info("mcp", { message: "Log level changed", level });
     return {};
   });
 
