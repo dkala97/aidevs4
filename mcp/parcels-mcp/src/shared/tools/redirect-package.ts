@@ -46,7 +46,7 @@ export const redirectPackageTool = defineTool({
     }
 
     try {
-      const client = new ParcelsClient(config.HUB_URL, config.PARCELS_API_KEY);
+      const client = new ParcelsClient(config.HUB_URL, config.HUB_API_KEY);
       const result = await client.redirectPackage(
         args.packageId,
         args.destination,

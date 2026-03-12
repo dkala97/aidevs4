@@ -63,7 +63,7 @@ export type UnifiedConfig = {
 
   // Parcels API
   HUB_URL: string;
-  PARCELS_API_KEY: string;
+  HUB_API_KEY: string;
 
   // Storage
   RS_TOKENS_FILE?: string;
@@ -192,7 +192,7 @@ export function parseConfig(env: Record<string, unknown>): UnifiedConfig {
     PROVIDER_ACCOUNTS_URL: env.PROVIDER_ACCOUNTS_URL as string | undefined,
 
     HUB_URL: String(env.HUB_URL || ""),
-    PARCELS_API_KEY: String(env.PARCELS_API_KEY || ""),
+    HUB_API_KEY: String(env.HUB_API_KEY || ""),
 
     RS_TOKENS_FILE: env.RS_TOKENS_FILE as string | undefined,
     RS_TOKENS_ENC_KEY: env.RS_TOKENS_ENC_KEY as string | undefined,
