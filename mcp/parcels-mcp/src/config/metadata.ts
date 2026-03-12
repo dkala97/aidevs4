@@ -16,22 +16,33 @@ export interface ToolMetadata {
 }
 
 export const toolsMetadata = {
-  example_api: {
-    name: 'example_api',
-    title: 'Example API Tool',
-    description: `Call an example external API endpoint and return the response.
+  check_package: {
+    name: "check_package",
+    title: "Sprawdź status paczki",
+    description: `Sprawdź aktualny status i lokalizację paczki na podstawie jej ID.
 
-This tool demonstrates best practices for:
-- Making HTTP requests to external APIs
-- Handling responses and errors gracefully
-- Validating input parameters with Zod schemas
-- Formatting output for LLM consumption
+Używaj tego narzędzia gdy:
+- Klient lub operator pyta o status przesyłki
+- Potrzebujesz potwierdzić lokalizację paczki przed przekierowaniem
+- Chcesz sprawdzić czy paczka dotarła do miejsca docelowego
 
-The tool can be customized for any REST API by modifying:
-1. The API endpoint URL
-2. Input schema validation rules
-3. Response parsing and formatting logic
-4. Error handling for specific API error codes`,
+Zwraca status paczki, aktualną lokalizację oraz dodatkowe metadane z API.`,
+  },
+  redirect_package: {
+    name: "redirect_package",
+    title: "Przekieruj paczkę",
+    description: `Przekieruj paczkę do nowego miejsca docelowego.
+
+Używaj tego narzędzia gdy:
+- Operator chce zmienić miejsce docelowe paczki
+- Klient prosi o zmianę adresu dostawy
+
+WAŻNE: Przed wywołaniem tego narzędzia MUSISZ uzyskać od operatora:
+1. ID paczki (packageId)
+2. Kod docelowego punktu odbioru (destination)
+3. Kod zabezpieczający (code) - operator poda go podczas rozmowy
+
+Po wykonaniu zwraca kod potwierdzenia (confirmation), który należy przekazać operatorowi.`,
   },
 } as const satisfies Record<string, ToolMetadata>;
 
@@ -39,7 +50,9 @@ The tool can be customized for any REST API by modifying:
  * Type-safe helper to get metadata for a tool.
  * Usage: getToolMetadata('example_api')
  */
-export function getToolMetadata(toolName: keyof typeof toolsMetadata): ToolMetadata {
+export function getToolMetadata(
+  toolName: keyof typeof toolsMetadata,
+): ToolMetadata {
   return toolsMetadata[toolName];
 }
 
@@ -54,7 +67,7 @@ export function getToolNames(): string[] {
  * Server-level metadata
  */
 export const serverMetadata = {
-  title: 'MCP Server Template',
+  title: "MCP Server Template",
   instructions:
-    'Use the available tools to inspect resources, run API calls, and keep responses concise.',
+    "Use the available tools to inspect resources, run API calls, and keep responses concise.",
 } as const;

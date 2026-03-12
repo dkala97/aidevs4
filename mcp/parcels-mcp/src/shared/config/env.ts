@@ -1,13 +1,13 @@
 // Unified config reader for both Node.js and Cloudflare Workers
 // Generalized from Spotify MCP implementation
 
-import type { AuthStrategyType } from '../auth/strategy.js';
+import type { AuthStrategyType } from "../auth/strategy.js";
 
 export type UnifiedConfig = {
   // Server
   HOST: string;
   PORT: number;
-  NODE_ENV: 'development' | 'production' | 'test';
+  NODE_ENV: "development" | "production" | "test";
 
   // MCP
   MCP_TITLE: string;
@@ -61,6 +61,10 @@ export type UnifiedConfig = {
   PROVIDER_API_URL?: string;
   PROVIDER_ACCOUNTS_URL?: string;
 
+  // Parcels API
+  HUB_URL: string;
+  PARCELS_API_KEY: string;
+
   // Storage
   RS_TOKENS_FILE?: string;
   /** Base64url-encoded 32-byte key for encrypting tokens at rest */
@@ -71,11 +75,11 @@ export type UnifiedConfig = {
   CONCURRENCY_LIMIT: number;
 
   // Logging
-  LOG_LEVEL: 'debug' | 'info' | 'warning' | 'error';
+  LOG_LEVEL: "debug" | "info" | "warning" | "error";
 };
 
 function parseBoolean(value: unknown): boolean {
-  return String(value || 'false').toLowerCase() === 'true';
+  return String(value || "false").toLowerCase() === "true";
 }
 
 function parseNumber(value: unknown, defaultValue: number): number {
@@ -84,8 +88,8 @@ function parseNumber(value: unknown, defaultValue: number): number {
 }
 
 function parseStringArray(value: unknown): string[] {
-  return String(value || '')
-    .split(',')
+  return String(value || "")
+    .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
 }
@@ -96,26 +100,29 @@ function parseStringArray(value: unknown): string[] {
  */
 function parseAuthStrategy(env: Record<string, unknown>): AuthStrategyType {
   const explicit = (env.AUTH_STRATEGY as string)?.toLowerCase();
-  if (explicit && ['oauth', 'bearer', 'api_key', 'custom', 'none'].includes(explicit)) {
+  if (
+    explicit &&
+    ["oauth", "bearer", "api_key", "custom", "none"].includes(explicit)
+  ) {
     return explicit as AuthStrategyType;
   }
 
   // Fallback: if AUTH_ENABLED is true, default to OAuth
   if (parseBoolean(env.AUTH_ENABLED)) {
-    return 'oauth';
+    return "oauth";
   }
 
   // Check if API_KEY is set → default to api_key
   if (env.API_KEY) {
-    return 'api_key';
+    return "api_key";
   }
 
   // Check if BEARER_TOKEN is set → default to bearer
   if (env.BEARER_TOKEN) {
-    return 'bearer';
+    return "bearer";
   }
 
-  return 'none';
+  return "none";
 }
 
 /**
@@ -126,22 +133,22 @@ export function parseConfig(env: Record<string, unknown>): UnifiedConfig {
   const authStrategy = parseAuthStrategy(env);
 
   return {
-    HOST: String(env.HOST || '127.0.0.1'),
+    HOST: String(env.HOST || "127.0.0.1"),
     PORT: parseNumber(env.PORT, 3000),
-    NODE_ENV: (env.NODE_ENV as UnifiedConfig['NODE_ENV']) || 'development',
+    NODE_ENV: (env.NODE_ENV as UnifiedConfig["NODE_ENV"]) || "development",
 
-    MCP_TITLE: String(env.MCP_TITLE || 'MCP Server Template'),
+    MCP_TITLE: String(env.MCP_TITLE || "MCP Server Template"),
     MCP_INSTRUCTIONS: String(
       env.MCP_INSTRUCTIONS ||
-        'Use these tools responsibly. Prefer minimal scopes and small page sizes.',
+        "Use these tools responsibly. Prefer minimal scopes and small page sizes.",
     ),
-    MCP_VERSION: String(env.MCP_VERSION || '0.1.0'),
-    MCP_PROTOCOL_VERSION: String(env.MCP_PROTOCOL_VERSION || '2025-06-18'),
+    MCP_VERSION: String(env.MCP_VERSION || "0.1.0"),
+    MCP_PROTOCOL_VERSION: String(env.MCP_PROTOCOL_VERSION || "2025-06-18"),
     MCP_ACCEPT_HEADERS: parseStringArray(env.MCP_ACCEPT_HEADERS),
 
     // Auth Strategy
     AUTH_STRATEGY: authStrategy,
-    AUTH_ENABLED: authStrategy === 'oauth' || parseBoolean(env.AUTH_ENABLED),
+    AUTH_ENABLED: authStrategy === "oauth" || parseBoolean(env.AUTH_ENABLED),
     AUTH_REQUIRE_RS: parseBoolean(env.AUTH_REQUIRE_RS),
     AUTH_ALLOW_DIRECT_BEARER: parseBoolean(env.AUTH_ALLOW_DIRECT_BEARER),
     AUTH_RESOURCE_URI: env.AUTH_RESOURCE_URI as string | undefined,
@@ -149,7 +156,7 @@ export function parseConfig(env: Record<string, unknown>): UnifiedConfig {
 
     // API Key auth
     API_KEY: env.API_KEY as string | undefined,
-    API_KEY_HEADER: String(env.API_KEY_HEADER || 'x-api-key'),
+    API_KEY_HEADER: String(env.API_KEY_HEADER || "x-api-key"),
 
     // Bearer token auth
     BEARER_TOKEN: env.BEARER_TOKEN as string | undefined,
@@ -160,27 +167,32 @@ export function parseConfig(env: Record<string, unknown>): UnifiedConfig {
     // OAuth
     OAUTH_CLIENT_ID: env.OAUTH_CLIENT_ID as string | undefined,
     OAUTH_CLIENT_SECRET: env.OAUTH_CLIENT_SECRET as string | undefined,
-    OAUTH_SCOPES: String(env.OAUTH_SCOPES || ''),
+    OAUTH_SCOPES: String(env.OAUTH_SCOPES || ""),
     OAUTH_AUTHORIZATION_URL: env.OAUTH_AUTHORIZATION_URL as string | undefined,
     OAUTH_TOKEN_URL: env.OAUTH_TOKEN_URL as string | undefined,
     OAUTH_REVOCATION_URL: env.OAUTH_REVOCATION_URL as string | undefined,
     OAUTH_REDIRECT_URI: String(
-      env.OAUTH_REDIRECT_URI || 'http://localhost:3000/callback',
+      env.OAUTH_REDIRECT_URI || "http://localhost:3000/callback",
     ),
     OAUTH_REDIRECT_ALLOWLIST: parseStringArray(env.OAUTH_REDIRECT_ALLOWLIST),
     OAUTH_REDIRECT_ALLOW_ALL: parseBoolean(env.OAUTH_REDIRECT_ALLOW_ALL),
     OAUTH_EXTRA_AUTH_PARAMS: env.OAUTH_EXTRA_AUTH_PARAMS as string | undefined,
 
     // CIMD (SEP-991)
-    CIMD_ENABLED: parseBoolean(env.CIMD_ENABLED ?? 'true'),
+    CIMD_ENABLED: parseBoolean(env.CIMD_ENABLED ?? "true"),
     CIMD_FETCH_TIMEOUT_MS: parseNumber(env.CIMD_FETCH_TIMEOUT_MS, 5000),
     CIMD_MAX_RESPONSE_BYTES: parseNumber(env.CIMD_MAX_RESPONSE_BYTES, 65536),
     CIMD_ALLOWED_DOMAINS: parseStringArray(env.CIMD_ALLOWED_DOMAINS),
 
     PROVIDER_CLIENT_ID: (env.PROVIDER_CLIENT_ID as string | undefined)?.trim(),
-    PROVIDER_CLIENT_SECRET: (env.PROVIDER_CLIENT_SECRET as string | undefined)?.trim(),
+    PROVIDER_CLIENT_SECRET: (
+      env.PROVIDER_CLIENT_SECRET as string | undefined
+    )?.trim(),
     PROVIDER_API_URL: env.PROVIDER_API_URL as string | undefined,
     PROVIDER_ACCOUNTS_URL: env.PROVIDER_ACCOUNTS_URL as string | undefined,
+
+    HUB_URL: String(env.HUB_URL || ""),
+    PARCELS_API_KEY: String(env.PARCELS_API_KEY || ""),
 
     RS_TOKENS_FILE: env.RS_TOKENS_FILE as string | undefined,
     RS_TOKENS_ENC_KEY: env.RS_TOKENS_ENC_KEY as string | undefined,
@@ -188,7 +200,7 @@ export function parseConfig(env: Record<string, unknown>): UnifiedConfig {
     RPS_LIMIT: parseNumber(env.RPS_LIMIT, 10),
     CONCURRENCY_LIMIT: parseNumber(env.CONCURRENCY_LIMIT, 5),
 
-    LOG_LEVEL: (env.LOG_LEVEL as UnifiedConfig['LOG_LEVEL']) || 'info',
+    LOG_LEVEL: (env.LOG_LEVEL as UnifiedConfig["LOG_LEVEL"]) || "info",
   };
 }
 
@@ -197,9 +209,9 @@ export function parseConfig(env: Record<string, unknown>): UnifiedConfig {
  * Workers should use parseConfig(env) with env bindings from fetch().
  */
 export function resolveConfig(): UnifiedConfig {
-  if (typeof process === 'undefined' || !process.env) {
+  if (typeof process === "undefined" || !process.env) {
     throw new Error(
-      'resolveConfig() requires Node.js process.env. Use parseConfig(env) in Workers.',
+      "resolveConfig() requires Node.js process.env. Use parseConfig(env) in Workers.",
     );
   }
   return parseConfig(process.env as Record<string, unknown>);

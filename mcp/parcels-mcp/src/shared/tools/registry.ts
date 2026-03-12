@@ -3,14 +3,16 @@
  * Tools defined here work in both Node.js and Cloudflare Workers.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import type { ZodObject, ZodRawShape, ZodTypeAny } from 'zod';
-import { getCurrentAuthContext } from '../../core/context.js';
-import { logger } from '../utils/logger.js';
-import { echoTool } from './echo.js';
-import { healthTool } from './health.js';
-import type { SharedToolDefinition, ToolContext, ToolResult } from './types.js';
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import type { ZodObject, ZodRawShape, ZodTypeAny } from "zod";
+import { getCurrentAuthContext } from "../../core/context.js";
+import { logger } from "../utils/logger.js";
+import { checkPackageTool } from "./check-package.js";
+import { echoTool } from "./echo.js";
+import { healthTool } from "./health.js";
+import { redirectPackageTool } from "./redirect-package.js";
+import type { SharedToolDefinition, ToolContext, ToolResult } from "./types.js";
 
 /**
  * Extract the shape from a Zod schema, handling ZodEffects (refined schemas).
@@ -18,12 +20,12 @@ import type { SharedToolDefinition, ToolContext, ToolResult } from './types.js';
  */
 function getSchemaShape(schema: ZodTypeAny): ZodRawShape | undefined {
   // If it's a ZodObject, return its shape directly
-  if ('shape' in schema && typeof schema.shape === 'object') {
+  if ("shape" in schema && typeof schema.shape === "object") {
     return (schema as ZodObject<ZodRawShape>).shape;
   }
 
   // If it's a ZodEffects (from .refine(), .transform(), etc.), unwrap to get inner schema
-  if ('_def' in schema && schema._def && typeof schema._def === 'object') {
+  if ("_def" in schema && schema._def && typeof schema._def === "object") {
     const def = schema._def as { schema?: ZodTypeAny; innerType?: ZodTypeAny };
     // ZodEffects stores the inner schema in _def.schema
     if (def.schema) {
@@ -57,16 +59,16 @@ interface ToolHandlerExtra {
  */
 export type ContextResolver = (requestId: string | number) =>
   | {
-      authStrategy?: ToolContext['authStrategy'];
+      authStrategy?: ToolContext["authStrategy"];
       providerToken?: string;
-      provider?: ToolContext['provider'];
+      provider?: ToolContext["provider"];
       resolvedHeaders?: Record<string, string>;
     }
   | undefined;
 
 // Re-export types for convenience
-export type { SharedToolDefinition, ToolContext, ToolResult } from './types.js';
-export { defineTool } from './types.js';
+export type { SharedToolDefinition, ToolContext, ToolResult } from "./types.js";
+export { defineTool } from "./types.js";
 
 /**
  * Simplified tool interface for the registry (type-erased for storage).
@@ -79,7 +81,10 @@ export interface RegisteredTool {
   inputSchema: ZodObject<ZodRawShape>;
   outputSchema?: ZodRawShape;
   annotations?: Record<string, unknown>;
-  handler: (args: Record<string, unknown>, context: ToolContext) => Promise<ToolResult>;
+  handler: (
+    args: Record<string, unknown>,
+    context: ToolContext,
+  ) => Promise<ToolResult>;
 }
 
 /**
@@ -107,6 +112,8 @@ function asRegisteredTool<T extends ZodRawShape>(
 export const sharedTools: RegisteredTool[] = [
   asRegisteredTool(healthTool),
   asRegisteredTool(echoTool),
+  asRegisteredTool(checkPackageTool),
+  asRegisteredTool(redirectPackageTool),
 ];
 
 /**
@@ -139,7 +146,7 @@ export async function executeSharedTool(
   const tool = getSharedTool(name);
   if (!tool) {
     return {
-      content: [{ type: 'text', text: `Unknown tool: ${name}` }],
+      content: [{ type: "text", text: `Unknown tool: ${name}` }],
       isError: true,
     };
   }
@@ -148,7 +155,7 @@ export async function executeSharedTool(
     // Check for cancellation before starting
     if (context.signal?.aborted) {
       return {
-        content: [{ type: 'text', text: 'Operation was cancelled' }],
+        content: [{ type: "text", text: "Operation was cancelled" }],
         isError: true,
       };
     }
@@ -159,11 +166,11 @@ export async function executeSharedTool(
       const errors = parseResult.error.errors
         .map(
           (e: { path: (string | number)[]; message: string }) =>
-            `${e.path.join('.')}: ${e.message}`,
+            `${e.path.join(".")}: ${e.message}`,
         )
-        .join(', ');
+        .join(", ");
       return {
-        content: [{ type: 'text', text: `Invalid input: ${errors}` }],
+        content: [{ type: "text", text: `Invalid input: ${errors}` }],
         isError: true,
       };
     }
@@ -180,8 +187,8 @@ export async function executeSharedTool(
         return {
           content: [
             {
-              type: 'text',
-              text: 'Tool with outputSchema must return structuredContent (unless isError is true)',
+              type: "text",
+              text: "Tool with outputSchema must return structuredContent (unless isError is true)",
             },
           ],
           isError: true,
@@ -196,13 +203,15 @@ export async function executeSharedTool(
     // Check if this was an abort
     if (context.signal?.aborted) {
       return {
-        content: [{ type: 'text', text: 'Operation was cancelled' }],
+        content: [{ type: "text", text: "Operation was cancelled" }],
         isError: true,
       };
     }
 
     return {
-      content: [{ type: 'text', text: `Tool error: ${(error as Error).message}` }],
+      content: [
+        { type: "text", text: `Tool error: ${(error as Error).message}` },
+      ],
       isError: true,
     };
   }
@@ -224,8 +233,8 @@ export function registerTools(
     // Extract shape from schema, handling ZodEffects (refined schemas)
     const inputSchemaShape = getSchemaShape(tool.inputSchema);
     if (!inputSchemaShape) {
-      logger.error('tools', {
-        message: 'Failed to extract schema shape',
+      logger.error("tools", {
+        message: "Failed to extract schema shape",
         toolName: tool.name,
       });
       throw new Error(`Failed to extract schema shape for tool: ${tool.name}`);
@@ -249,7 +258,7 @@ export function registerTools(
         // Fallback to AsyncLocalStorage if requestId not available
         // This is the primary method since MCP SDK doesn't pass requestId to tool handlers
         if (!authContext) {
-          authContext = getCurrentAuthContext();
+          authContext = getCurrentAuthContext() as typeof authContext;
         }
 
         const context: ToolContext = {
@@ -272,5 +281,5 @@ export function registerTools(
     );
   }
 
-  logger.info('tools', { message: `Registered ${sharedTools.length} tools` });
+  logger.info("tools", { message: `Registered ${sharedTools.length} tools` });
 }
