@@ -2,8 +2,6 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SetLevelRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { config } from '../config/env.js';
 import { getLowLevelServer } from '../shared/mcp/server-internals.js';
-import { registerPrompts } from '../shared/prompts/index.js';
-import { registerResources } from '../shared/resources/index.js';
 import { type ContextResolver, registerTools } from '../shared/tools/registry.js';
 import { logger } from '../shared/utils/logger.js';
 import { buildCapabilities } from './capabilities.js';
@@ -58,8 +56,6 @@ export function buildServer(options: ServerOptions): McpServer {
 
   // Register handlers with context resolver for auth data
   registerTools(server, contextResolver);
-  registerPrompts(server);
-  registerResources(server);
 
   // Register logging/setLevel handler (required when logging capability is advertised)
   server.server.setRequestHandler(SetLevelRequestSchema, async (request) => {
