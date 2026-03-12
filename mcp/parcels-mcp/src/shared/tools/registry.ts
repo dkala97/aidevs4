@@ -9,8 +9,6 @@ import type { ZodObject, ZodRawShape, ZodTypeAny } from "zod";
 import { getCurrentAuthContext } from "../../core/context.js";
 import { logger } from "../utils/logger.js";
 import { checkPackageTool } from "./check-package.js";
-import { echoTool } from "./echo.js";
-import { healthTool } from "./health.js";
 import { redirectPackageTool } from "./redirect-package.js";
 import type { SharedToolDefinition, ToolContext, ToolResult } from "./types.js";
 
@@ -110,8 +108,6 @@ function asRegisteredTool<T extends ZodRawShape>(
  * Add new tools here to make them available everywhere.
  */
 export const sharedTools: RegisteredTool[] = [
-  asRegisteredTool(healthTool),
-  asRegisteredTool(echoTool),
   asRegisteredTool(checkPackageTool),
   asRegisteredTool(redirectPackageTool),
 ];
