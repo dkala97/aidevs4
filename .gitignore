@@ -6,3 +6,5 @@ translated/
 vault/
 
 *.pyc
+
+.data
