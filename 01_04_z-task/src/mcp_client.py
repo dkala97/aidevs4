@@ -1,0 +1,193 @@
+from __future__ import annotations
+
+import json
+from contextlib import AsyncExitStack
+from pathlib import Path
+from typing import Any
+
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+from .config import PROJECT_ROOT
+from .logger import log
+
+
+class McpError(RuntimeError):
+    pass
+
+
+class McpClient:
+    def __init__(self) -> None:
+        self._exit_stack = AsyncExitStack()
+        self._session: ClientSession | None = None
+        self._server_name: str | None = None
+
+    @property
+    def session(self) -> ClientSession:
+        if self._session is None:
+            raise McpError("MCP client is not connected")
+        return self._session
+
+    async def connect(self, server_name: str) -> None:
+        config = self._load_mcp_config()
+        server_config = config.get("mcpServers", {}).get(server_name)
+        if not server_config:
+            raise McpError(f'MCP server "{server_name}" not found in mcp.json')
+
+        command = server_config.get("command")
+        if not command:
+            raise McpError(f'MCP server "{server_name}" is missing the command field')
+
+        args = [str(arg) for arg in server_config.get("args", [])]
+        env = {key: str(value) for key, value in server_config.get("env", {}).items()}
+
+        log.info(f"Spawning MCP server: {server_name}")
+        log.info(f"Command: {command} {' '.join(args)}")
+
+        transport = await self._exit_stack.enter_async_context(
+            stdio_client(
+                StdioServerParameters(
+                    command=str(command),
+                    args=args,
+                    env=env,
+                    cwd=PROJECT_ROOT,
+                )
+            )
+        )
+        read_stream, write_stream = transport
+
+        session = await self._exit_stack.enter_async_context(
+            ClientSession(read_stream, write_stream)
+        )
+
+        try:
+            await session.initialize()
+        except Exception as error:
+            await self._exit_stack.aclose()
+            raise McpError(f"Failed to initialize MCP session: {error}") from error
+
+        self._session = session
+        self._server_name = server_name
+        log.success(f"Connected to {server_name} via stdio")
+
+    async def close(self) -> None:
+        await self._exit_stack.aclose()
+        self._session = None
+
+    async def list_tools(self) -> list[dict[str, Any]]:
+        result = await self.session.list_tools()
+        tools = []
+        for tool in result.tools:
+            item = self._model_to_dict(tool)
+            tools.append(
+                {
+                    "name": item.get("name", ""),
+                    "description": item.get("description", ""),
+                    "inputSchema": item.get("inputSchema") or item.get("input_schema") or {"type": "object"},
+                }
+            )
+        return tools
+
+    async def call_tool(self, name: str, arguments: dict[str, Any]) -> Any:
+        try:
+            result = await self.session.call_tool(name, arguments=arguments)
+        except Exception as error:
+            raise McpError(f"MCP tool '{name}' failed: {error}") from error
+
+        is_error = bool(getattr(result, "isError", False) or getattr(result, "is_error", False))
+        structured = getattr(result, "structuredContent", None)
+        if structured is None:
+            structured = getattr(result, "structured_content", None)
+
+        if structured is not None:
+            if is_error:
+                raise McpError(json.dumps(structured, ensure_ascii=True))
+            return structured
+
+        parsed_blocks = [self._parse_content_block(content) for content in getattr(result, "content", [])]
+        parsed_blocks = [block for block in parsed_blocks if block is not None]
+
+        if is_error:
+            raise McpError(self._collapse_blocks(parsed_blocks))
+
+        if not parsed_blocks:
+            return {}
+        if len(parsed_blocks) == 1:
+            return parsed_blocks[0]
+        return parsed_blocks
+
+    def mcp_tools_to_openai(self, mcp_tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [
+            {
+                "type": "function",
+                "name": tool["name"],
+                "description": tool.get("description", ""),
+                "parameters": tool.get("inputSchema", {"type": "object"}),
+                "strict": False,
+            }
+            for tool in mcp_tools
+        ]
+
+    def _load_mcp_config(self) -> dict[str, Any]:
+        config_path = PROJECT_ROOT / "mcp.json"
+        try:
+            return json.loads(config_path.read_text(encoding="utf-8"))
+        except FileNotFoundError as error:
+            raise McpError(f"Missing MCP config: {config_path}") from error
+        except json.JSONDecodeError as error:
+            raise McpError(f"Invalid JSON in {config_path}: {error}") from error
+
+    @staticmethod
+    def _model_to_dict(value: Any) -> dict[str, Any]:
+        if hasattr(value, "model_dump"):
+            return value.model_dump(by_alias=True, exclude_none=True)
+        if isinstance(value, dict):
+            return value
+        raise McpError(f"Unsupported MCP object type: {type(value)!r}")
+
+    def _parse_content_block(self, content: Any) -> Any:
+        block_type = getattr(content, "type", None)
+        if block_type == "text":
+            text = getattr(content, "text", "")
+            if not text:
+                return None
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                return text
+
+        if block_type == "image":
+            return {
+                "type": "image",
+                "mimeType": getattr(content, "mimeType", None),
+                "data": getattr(content, "data", None),
+            }
+
+        if block_type == "resource":
+            resource = getattr(content, "resource", None)
+            if resource is None:
+                return None
+            resource_dict = self._model_to_dict(resource)
+            text = resource_dict.get("text")
+            if isinstance(text, str):
+                try:
+                    return json.loads(text)
+                except json.JSONDecodeError:
+                    return text
+            return resource_dict
+
+        if hasattr(content, "model_dump"):
+            return content.model_dump(by_alias=True, exclude_none=True)
+
+        return str(content)
+
+    @staticmethod
+    def _collapse_blocks(blocks: list[Any]) -> str:
+        if not blocks:
+            return "Unknown MCP tool error"
+
+        if len(blocks) == 1:
+            block = blocks[0]
+            return block if isinstance(block, str) else json.dumps(block, ensure_ascii=True)
+
+        return json.dumps(blocks, ensure_ascii=True)
