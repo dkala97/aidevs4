@@ -71,11 +71,11 @@ SEED_API_KEY=your_optional_seed_token
 
 ## Lesson 01
 
-| Example | Run | Description |
-|---------|-----|-------------|
-| `01_01_interaction` | `npm run lesson1:interaction` | Multi-turn conversation via input history |
-| `01_01_structured` | `npm run lesson1:structured` | Structured JSON output with schema validation |
-| `01_01_grounding` | `npm run lesson1:grounding` | Fact-checked HTML from markdown notes |
+| Example             | Run                           | Description                                   |
+| ------------------- | ----------------------------- | --------------------------------------------- |
+| `01_01_interaction` | `npm run lesson1:interaction` | Multi-turn conversation via input history     |
+| `01_01_structured`  | `npm run lesson1:structured`  | Structured JSON output with schema validation |
+| `01_01_grounding`   | `npm run lesson1:grounding`   | Fact-checked HTML from markdown notes         |
 
 Install dependencies:
 
@@ -85,10 +85,10 @@ npm run lesson1:install
 
 ## Lesson 02
 
-| Example | Run | Description |
-|---------|-----|-------------|
-| `01_02_tool_use` | `npm run lesson2:tool_use` | Function calling with sandboxed filesystem tools |
-| `01_02_tools` | `bun run lesson2:minimal` | Minimal Responses API function-calling demo with a single `get_weather` tool |
+| Example          | Run                        | Description                                                                  |
+| ---------------- | -------------------------- | ---------------------------------------------------------------------------- |
+| `01_02_tool_use` | `npm run lesson2:tool_use` | Function calling with sandboxed filesystem tools                             |
+| `01_02_tools`    | `bun run lesson2:minimal`  | Minimal Responses API function-calling demo with a single `get_weather` tool |
 
 Install dependencies:
 
@@ -98,12 +98,12 @@ npm run lesson2:install
 
 ## Lesson 03
 
-| Example | Run | Description |
-|---------|-----|-------------|
-| `01_03_mcp_core` | `npm run lesson3:mcp_core` | Core MCP capabilities via stdio transport |
-| `01_03_mcp_native` | `npm run lesson3:mcp_native` | One agent using MCP and native tools together |
-| `01_03_mcp_translator` | `npm run lesson3:mcp_translator` | File translation agent over `files-mcp` |
-| `01_03_upload_mcp` | `npm run lesson3:upload_mcp` | Upload workspace files through MCP servers |
+| Example                | Run                              | Description                                   |
+| ---------------------- | -------------------------------- | --------------------------------------------- |
+| `01_03_mcp_core`       | `npm run lesson3:mcp_core`       | Core MCP capabilities via stdio transport     |
+| `01_03_mcp_native`     | `npm run lesson3:mcp_native`     | One agent using MCP and native tools together |
+| `01_03_mcp_translator` | `npm run lesson3:mcp_translator` | File translation agent over `files-mcp`       |
+| `01_03_upload_mcp`     | `npm run lesson3:upload_mcp`     | Upload workspace files through MCP servers    |
 
 Install dependencies:
 
@@ -113,18 +113,18 @@ npm run lesson3:install
 
 ## Lesson 04
 
-| Example | Run | Description |
-|---------|-----|-------------|
-| `01_04_audio` | `npm run lesson4:audio` | Audio transcription, analysis, and TTS with Gemini |
-| `01_04_video` | `npm run lesson4:video` | Video analysis, transcription, and extraction with Gemini |
-| `01_04_generation` | `npm run lesson4:generation` | Interactive video-processing example with Gemini and MCP tools |
-| `01_04_video_generation` | `npm run lesson4:video_generation` | Frame-based video generation with Gemini and Kling |
-| `01_04_reports` | `npm run lesson4:reports` | PDF reports from HTML, local assets, and generated images |
-| `01_04_image_guidance` | `npm run lesson4:image_guidance` | Pose-guided image generation from JSON templates |
-| `01_04_json_image` | `npm run lesson4:json_image` | Token-efficient image generation from JSON prompts |
-| `01_04_image_editing` | `npm run lesson4:image_editing` | Iterative image generation and editing with quality checks |
-| `01_04_sprites` | `npm run lesson4:sprites` | Parallel isometric sprite-set generation from JSON templates |
-| `01_04_image_recognition` | `npm run lesson4:image_recognition` | Vision-based image classification with MCP file operations |
+| Example                   | Run                                 | Description                                                    |
+| ------------------------- | ----------------------------------- | -------------------------------------------------------------- |
+| `01_04_audio`             | `npm run lesson4:audio`             | Audio transcription, analysis, and TTS with Gemini             |
+| `01_04_video`             | `npm run lesson4:video`             | Video analysis, transcription, and extraction with Gemini      |
+| `01_04_generation`        | `npm run lesson4:generation`        | Interactive video-processing example with Gemini and MCP tools |
+| `01_04_video_generation`  | `npm run lesson4:video_generation`  | Frame-based video generation with Gemini and Kling             |
+| `01_04_reports`           | `npm run lesson4:reports`           | PDF reports from HTML, local assets, and generated images      |
+| `01_04_image_guidance`    | `npm run lesson4:image_guidance`    | Pose-guided image generation from JSON templates               |
+| `01_04_json_image`        | `npm run lesson4:json_image`        | Token-efficient image generation from JSON prompts             |
+| `01_04_image_editing`     | `npm run lesson4:image_editing`     | Iterative image generation and editing with quality checks     |
+| `01_04_sprites`           | `npm run lesson4:sprites`           | Parallel isometric sprite-set generation from JSON templates   |
+| `01_04_image_recognition` | `npm run lesson4:image_recognition` | Vision-based image classification with MCP file operations     |
 
 Install dependencies:
 
@@ -134,10 +134,10 @@ npm run lesson4:install
 
 ## Lesson 05
 
-| Example | Run | Description |
-|---------|-----|-------------|
-| `01_05_confirmation` | `npm run lesson5:confirmation` | Email-sending agent with human-in-the-loop confirmation UI |
-| `01_05_agent` | `npm run lesson5:agent` | API server for agent orchestration, tool execution, and MCP integration |
+| Example              | Run                            | Description                                                             |
+| -------------------- | ------------------------------ | ----------------------------------------------------------------------- |
+| `01_05_confirmation` | `npm run lesson5:confirmation` | Email-sending agent with human-in-the-loop confirmation UI              |
+| `01_05_agent`        | `npm run lesson5:agent`        | API server for agent orchestration, tool execution, and MCP integration |
 
 Install dependencies:
 
@@ -156,8 +156,8 @@ The agent server starts on `http://127.0.0.1:3000` by default. The seed script c
 
 ## Lesson 06
 
-| Example | Run | Description |
-|---------|-----|-------------|
+| Example             | Run                           | Description                                                    |
+| ------------------- | ----------------------------- | -------------------------------------------------------------- |
 | `02_01_agentic_rag` | `npm run lesson6:agentic_rag` | Agentic RAG with multi-step retrieval and conversation history |
 
 Install dependencies:
@@ -168,10 +168,10 @@ npm run lesson6:install
 
 ## Lesson 07
 
-| Example | Run | Description |
-|---------|-----|-------------|
-| `02_02_chunking` | `npm run lesson7:chunking` | Four text chunking strategies compared side-by-side |
-| `02_02_embedding` | `npm run lesson7:embedding` | Interactive embedding demo with a pairwise similarity matrix |
+| Example            | Run                          | Description                                                                         |
+| ------------------ | ---------------------------- | ----------------------------------------------------------------------------------- |
+| `02_02_chunking`   | `npm run lesson7:chunking`   | Four text chunking strategies compared side-by-side                                 |
+| `02_02_embedding`  | `npm run lesson7:embedding`  | Interactive embedding demo with a pairwise similarity matrix                        |
 | `02_02_hybrid_rag` | `npm run lesson7:hybrid_rag` | Hybrid RAG agent with SQLite FTS5 full-text search and sqlite-vec vector similarity |
 
 Install dependencies:
@@ -182,8 +182,8 @@ npm run lesson7:install
 
 ## Lesson 08
 
-| Example | Run | Description |
-|---------|-----|-------------|
+| Example              | Run                            | Description                                                                       |
+| -------------------- | ------------------------------ | --------------------------------------------------------------------------------- |
 | `02_03_graph_agents` | `npm run lesson8:graph_agents` | Graph RAG agent with Neo4j knowledge graph, hybrid search, and entity exploration |
 
 Install dependencies:
@@ -200,8 +200,8 @@ docker run -d --name neo4j -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/passwor
 
 ## Lesson 09
 
-| Example | Run | Description |
-|---------|-----|-------------|
+| Example     | Run                   | Description                                          |
+| ----------- | --------------------- | ---------------------------------------------------- |
 | `02_04_ops` | `npm run lesson9:ops` | Multi-agent daily ops generator with task delegation |
 
 Install dependencies:
@@ -225,8 +225,8 @@ npm run lesson10:install
 
 ## Lesson 20
 
-| Example | Run | Description |
-|---------|-----|-------------|
+| Example             | Run                            | Description                                                                      |
+| ------------------- | ------------------------------ | -------------------------------------------------------------------------------- |
 | `05_01_agent_graph` | `npm run lesson20:agent_graph` | Multi-agent graph scheduler with task delegation, recovery, and a live dashboard |
 
 Install dependencies:
