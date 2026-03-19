@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 import requests
-from ..shared_config import (
+
+from ..config import (
     AI_API_KEY,
     EXTRA_API_HEADERS,
     REQUEST_TIMEOUT_SECONDS,

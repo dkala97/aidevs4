@@ -15,7 +15,7 @@ from ...config import HUB_URL, HUB_API_KEY, PROJECT_ROOT
 REQUEST_CHANNEL = "vision:request"
 DONE_CHANNEL = "vision:done"
 DEFAULT_REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-WAIT_TIMEOUT_SECONDS = 30
+WAIT_TIMEOUT_SECONDS = 3600
 logger = logging.getLogger(__name__)
 
 
