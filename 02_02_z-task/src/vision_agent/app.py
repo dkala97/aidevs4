@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 import os
 import sys
+from pathlib import Path
 from typing import Any
 
 from redis.asyncio import Redis
 
-from src.native.tools import understand_image
+from src.agent import run
 from src.shared_config import PROJECT_ROOT
 
 DEFAULT_CHANNEL = "vision:request"
@@ -39,11 +39,18 @@ def parse_args() -> argparse.Namespace:
         default=str(DEFAULT_PROMPT_PATH),
         help="Path to the default prompt file.",
     )
+    parser.add_argument(
+        "--query",
+        default=None,
+        help="Default prompt/query",
+    )
     return parser.parse_args()
 
 
 def _load_default_prompt(default_prompt_path: str) -> str:
-    prompt_path = (PROJECT_ROOT / default_prompt_path).resolve()
+    requested_path = Path(default_prompt_path)
+    prompt_path = requested_path if requested_path.is_absolute() else (PROJECT_ROOT / requested_path)
+    prompt_path = prompt_path.resolve()
     if prompt_path.is_file():
         prompt = prompt_path.read_text(encoding="utf-8").strip()
         if prompt:
@@ -68,24 +75,18 @@ def _resolve_prompt_for_image(image_path: str, default_prompt: str) -> str:
 
     return default_prompt
 
-
-async def _handle_request(payload: str, default_prompt: str) -> str:
-    image_path = _extract_image_path(payload)
-    prompt = _resolve_prompt_for_image(image_path, default_prompt)
-
-    result = await understand_image(image_path=image_path, question=prompt)
+def _write_info(image_path: str, result_info):
     image_full_path = (PROJECT_ROOT / image_path).resolve()
     info_path = image_full_path.with_name(f"{image_full_path.stem}-info.md")
-    info_path.write_text(f"{result['answer'].strip()}\n", encoding="utf-8")
-    print(f"Image: {image_path}, result:\n{result['answer']}\n", flush=True)
-    return image_path
-
+    info_path.write_text(f"{result_info.strip()}\n", encoding="utf-8")
 
 async def async_main() -> int:
     args = parse_args()
     redis_client: Redis | None = None
     pubsub: Any = None
-    default_prompt = _load_default_prompt(args.default_prompt_path)
+    default_prompt = args.query
+    if not default_prompt:
+        default_prompt = _load_default_prompt(args.default_prompt_path)
 
     try:
         print(f"Subscribing to {args.channel} on {args.redis_url}", flush=True)
@@ -104,8 +105,19 @@ async def async_main() -> int:
             try:
                 image_path = _extract_image_path(payload)
                 print(f"Processing started for image: {image_path}", flush=True)
-                processed_image_path = await _handle_request(payload, default_prompt)
-                await redis_client.publish(DONE_CHANNEL, processed_image_path)
+                prompt = _resolve_prompt_for_image(image_path, default_prompt)
+                prompt += f"\nImage path: {image_path}"
+
+                print("Starting agent loop...")
+                result = await run(prompt)
+                print("Agent finished")
+
+                _write_info(image_path, result["response"])
+
+                print()
+                print(result["response"])
+
+                await redis_client.publish(DONE_CHANNEL, image_path)
 
             except Exception as error:
                 print(f"Request failed: {error}", flush=True)
