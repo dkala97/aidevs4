@@ -32,16 +32,16 @@ class McpClient:
         self._session: ClientSession | None = None
         self._agent_config = agent_config
         self._server_name: str = server_name
-        self._config_path: str = config_path if config_path else get_default_mcp_config_path()
+        self._config_path: str = config_path if config_path else get_default_mcp_config_path(agent_config.PROJECT_ROOT)
 
     @staticmethod
     def create_clients_from_config(agent_config: AgentConfig, mcp_config_path: str | None = None, servers: list[str] = None) -> dict[str, McpClient] :
         mcp_clients = {}
         mcp_config = mcp_config_path if mcp_config_path else get_default_mcp_config_path(agent_config.PROJECT_ROOT)
         config = McpClient._load_mcp_config(mcp_config)
-        servers_to_create = [ name for name, _ in config if not servers or name in servers ]
+        servers_to_create = [ name for name, _ in config.get("mcpServers", {}).items() if not servers or name in servers ]
         for server_name in servers_to_create:
-            mcp_clients[server_name] = McpClient(server_name, mcp_config)
+            mcp_clients[server_name] = McpClient(agent_config, server_name, mcp_config)
         return mcp_clients
 
     @property
@@ -59,7 +59,8 @@ class McpClient:
         command = server_config.get("command")
         if not command:
             raise McpError(f'MCP server "{self._server_name}" is missing the command field')
-        cwd = server_config.get("cwd", self._agent_config.PROJECT_ROOT)
+        cwd = str(server_config.get("cwd", self._agent_config.PROJECT_ROOT))
+        cwd = cwd.replace("${PROJECT_ROOT}", self._agent_config.PROJECT_ROOT.as_posix())
 
         args = [str(arg) for arg in server_config.get("args", [])]
         env = {key: str(value) for key, value in server_config.get("env", {}).items()}

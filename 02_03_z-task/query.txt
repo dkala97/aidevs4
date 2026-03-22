@@ -1,0 +1,13 @@
+A power plant experienced a failure yesterday. You have access to its full system log for that day.
+
+Your goal: produce a condensed log of only the events relevant to the failure analysis and submit it to Centrala. Technicians will review it and confirm whether it contains enough information to diagnose the root cause.
+
+Task:
+1. Download the failure log using download_logs.
+2. Extract only CRIT, ERRO and WARN logs.
+3. Read last log line and based on it's timestamp prepare regex filter to take only logs for about 2 hours before last log.
+3. Compress descriptions to fit the result within 1500 tokens.
+4. Verify the token count with count_tokens
+5. Submit using submit_to_centrala.
+6. Read Centrala's feedback — if specific components or subsystems are flagged as missing, increase log filtering for these components, run filtering again and resubmit.
+7. Repeat until you receive the success flag.

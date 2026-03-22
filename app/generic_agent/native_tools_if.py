@@ -13,7 +13,7 @@ class NativeToolsIf(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def execute_native_tool(self, arguments: dict[str, Any]) -> dict[str, Any]:
+    async def call_tool(self, name: str, arguments: dict[str, Any]) -> Any:
         raise NotImplementedError()
 
 class NativeToolsFactoryIf(ABC):
@@ -30,7 +30,7 @@ class NativeToolsStub(NativeToolsIf):
     def is_native_tool(self, name: str) -> bool:
         return False
 
-    async def execute_native_tool(self, arguments: dict[str, Any]) -> dict[str, Any]:
+    async def call_tool(self, name: str, arguments: dict[str, Any]) -> Any:
         return {}
 
 class NativeToolsFactoryStub(NativeToolsFactoryIf):
