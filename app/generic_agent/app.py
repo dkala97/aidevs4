@@ -50,15 +50,20 @@ async def app_async_main(config: AgentConfig, args: argparse.Namespace, native_t
     try:
         log.box(global_app_description)
 
-        mcp_tools_list: dict[str, Any] = {}
-        native_tools_list: dict[str, Any] = {}
+        query = args.query
+        if not query:
+            with open(args.query_file) as query_file:
+                query = query_file.read()
+
+        mcp_tools_list: list[dict[str, Any]] = []
+        native_tools_list: list[dict[str, Any]] = []
 
         mcp_clients = McpClient.create_clients_from_config(config, args.mcp_config, args.server)
-        for server_name, mcp_client in mcp_clients:
+        for server_name, mcp_client in mcp_clients.items():
             log.start(f"Connecting to MCP server '{server_name}'...")
             await mcp_client.connect()
             mcp_tools = await mcp_client.list_tools()
-            mcp_tools_list |= mcp_tools
+            mcp_tools_list.extend(mcp_tools)
             log.success(
                 "MCP: " + ", ".join(tool["name"] for tool in mcp_tools) if mcp_tools else "MCP: no tools"
             )
@@ -73,7 +78,7 @@ async def app_async_main(config: AgentConfig, args: argparse.Namespace, native_t
             log.info("No native tools provided")
 
         log.start("Starting agent loop...")
-        result = await run(config, args.query, mcp_clients=mcp_clients, mcp_tools=mcp_tools_list, native_tools=native_tools, native_tools_list=native_tools_list)
+        result = await run(config, query, mcp_clients=mcp_clients, mcp_tools=mcp_tools_list, native_tools=native_tools, native_tools_list=native_tools_list)
 
         log.success("Agent finished")
         print()

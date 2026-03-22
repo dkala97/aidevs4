@@ -18,7 +18,7 @@ async def _run_tool(mcp_clients: dict[str, McpClient], native_tools: NativeTools
 
     try:
         result = (
-            await native_tools.execute_native_tool(name, arguments)
+            await native_tools.call_tool(name, arguments)
             if native_tools.is_native_tool(name)
             else await mcp_client_route(mcp_clients, name).call_tool(name, arguments)
         )
