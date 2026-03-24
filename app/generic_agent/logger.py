@@ -62,5 +62,11 @@ class _Logger:
     def vision_result(self, answer: str) -> None:
         print(f"[{_timestamp()}] A: {answer[:200]}")
 
+    def http_request(self, method: str, url: str, payload: dict) -> None:
+        print(f"[{_timestamp()}] HTTP {method} {url} payload={payload}")
+
+    def http_response(self, status_code: int, headers: dict[str, str], body_preview: str) -> None:
+        print(f"[{_timestamp()}] HTTP {status_code} headers={headers}")
+        print(f"[{_timestamp()}] HTTP body={body_preview[:300]}")
 
 log = _Logger()
