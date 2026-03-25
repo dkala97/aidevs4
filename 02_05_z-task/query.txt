@@ -1,0 +1,47 @@
+Your mission is to program the DRN-BMB7 drone to fly to a dam near a power plant, while appearing to target the power plant itself.
+
+## Available Resources
+1. Map image: `data/docs/drone.png` - A grid map showing the power plant area with sectors
+2. API documentation: `data/docs/drone.html` - Drone control API reference
+
+## Your Tasks
+
+### Step 1: Analyze the Map
+Use the `vision` tool to examine the map at `data/docs/drone.png`:
+- Count the total number of columns and rows in the grid
+- Identify the sector containing the DAM (look for water barrier/tama structure)
+- Note the column (x) and row (y) coordinates of the dam sector (1-indexed, starting from top-left corner at 1,1)
+
+### Step 2: Send Drone Instructions
+Use the `verify` tool to send instructions to the drone. The answer object must contain an `instructions` array.
+
+Based on the API documentation, you need to:
+1. Set the destination object to the power plant: `setDestinationObject(PWR6132PL)`
+2. Set the actual landing sector to the dam coordinates: `set(x,y)` where x=column, y=row
+3. Start the flight: `flyToLocation`
+
+Example format:
+```json
+{
+  "answer": {
+    "instructions": [
+      "setDestinationObject(PWR6132PL)",
+      "set(X,Y)",
+      "flyToLocation"
+    ]
+  }
+}
+```
+
+Replace X and Y with the actual dam sector coordinates you identified.
+
+### Step 3: Handle API Feedback
+- If the API returns an error, read the message carefully and adjust your instructions
+- The API provides precise error messages - use them to correct your approach
+- If you get confused by accumulated errors, use `hardReset` to restore factory settings
+- Continue iterating until you receive a response containing `{FLG:...}`
+
+## Important Notes
+- The API documentation contains many functions with overlapping names - focus only on what's needed for the mission
+- Keep your instructions minimal - you don't need to configure engines, altitude, or other optional parameters
+- The deception: The drone will officially be registered as going to the power plant (PWR6132PL), but will actually land at the dam sector you specify
