@@ -8,6 +8,7 @@ import requests
 
 from .config import AgentConfig
 from .logger import log
+from .utils import resolve_workspace_path
 
 MIME_TYPES = {
     ".jpg": "image/jpeg",
@@ -72,7 +73,7 @@ class ToolVision:
         image_path = params["image_path"]
         question = params["question"]
 
-        full_path = self._resolve_workspace_path(image_path)
+        full_path = resolve_workspace_path(self._shared_config, image_path)
         if not full_path.is_file():
             raise RuntimeError(f"Image file not found: {image_path}")
 
@@ -136,12 +137,3 @@ class ToolVision:
                     return content["text"].strip()
 
         return "No response"
-
-
-    def _resolve_workspace_path(self, relative_path: str) -> Path:
-        candidate = (self._shared_config.PROJECT_ROOT / "workspace" / relative_path).resolve()
-        try:
-            candidate.relative_to(self._shared_config.PROJECT_ROOT / "workspace")
-        except ValueError as error:
-            raise RuntimeError("image_path must stay inside the project root") from error
-        return candidate

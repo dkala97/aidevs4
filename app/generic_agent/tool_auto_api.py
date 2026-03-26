@@ -53,9 +53,10 @@ def create_tool_schema_auto_api(tool_name: str, description: str, parameters: An
     }
 
 class ToolAutoApi:
-    def __init__(self, config: AutoApiConfig) -> None:
+    def __init__(self, config: ToolAutoApiConfig, params_decorator = lambda params: params) -> None:
         self._next_allowed_epoch = 0.0
         self._config = config
+        self._params_decorator = params_decorator
 
     async def call(self, params: dict[str, Any]) ->Any:
         if not isinstance(params, dict):
@@ -71,7 +72,7 @@ class ToolAutoApi:
             )
 
         payload = self._config.PAYLOAD_PROTOTYPE
-        for key, value in params.items():
+        for key, value in self._params_decorator(params).items():
             payload[key] = value
 
         log.http_request("POST", self._config.ENDPOINT_URL, payload)
