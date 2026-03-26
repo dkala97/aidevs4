@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "files": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "../mcp/files-mcp/src/index.ts"
+      ],
+      "cwd": "${PROJECT_ROOT}",
+      "env": {
+        "LOG_LEVEL": "info",
+        "FS_ROOT": "./workspace"
+      }
+    }
+  }
+}
