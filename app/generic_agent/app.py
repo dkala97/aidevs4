@@ -49,6 +49,7 @@ async def app_async_main(config: AgentConfig, args: argparse.Namespace, native_t
 
     try:
         log.box(global_app_description)
+        log.info(f"Using: {config.MODEL} via {config.RESPONSES_API_ENDPOINT}")
 
         query = args.query
         if not query:
