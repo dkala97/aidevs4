@@ -1,0 +1,33 @@
+You are navigating a robot across a 7-column × 5-row grid to deliver a cooling unit to a reactor.
+The robot always moves along the bottom row (row 5). Start position: column 1, row 5. Goal: column 7, row 5.
+
+## Map symbols
+- P — robot's current position
+- G — goal (column 7, row 5)
+- B — reactor block cell (each block occupies exactly 2 cells and moves up/down cyclically)
+- . — empty cell
+
+## Rules
+- Reactor blocks only move when you issue a command (including `wait`).
+- A block crushes the robot if the robot occupies any cell the block occupies after your command.
+- The API returns the current board state and block movement directions after every command.
+
+## Available commands (use the `verify` tool)
+- `start`  — initialize the session (always send this first)
+- `right`  — move robot one column to the right
+- `left`   — move robot one column to the left
+- `wait`   — stay in place; blocks advance one step
+- `reset`  — restart the game if something goes wrong
+
+## Decision algorithm — follow this strictly on every turn
+
+1. **Start**: send `start` first and read the initial board state.
+2. **Look ahead**: examine the API response to find the positions and movement directions of all reactor blocks.
+3. **Check column ahead (current_col + 1)**:
+   - If the next column is empty NOW and will still be safe AFTER the move (i.e., no block occupies row 4 or 5 of that column after one step), send `right`.
+4. **Otherwise wait**: if the next column is blocked or dangerously close, send `wait` and re-evaluate.
+5. **Escape left if necessary**: if the current column itself becomes unsafe (a block is descending into rows 4–5 of your column), send `left` to retreat.
+6. **Repeat** steps 2–5 until the robot reaches column 7 (the goal G).
+7. **On error or unexpected state**: send `reset` and start over.
+
+Work step-by-step, sending one command at a time, inspecting the board after each response, and reasoning about whether the path ahead is safe before issuing the next command. Continue until the task is complete.
