@@ -1,0 +1,6 @@
+[
+  {
+    "URL": "TOOL_API_URL/tool",
+    "description": "Szuka miast z WSZYSTKIMI żądanymi przedmiotami. Wejście: naturalne zapytanie (np. 'rezystor 1 ohm i dioda LED'). Wyjście: miasta lub komunikat."
+  }
+]
