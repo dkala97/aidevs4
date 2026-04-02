@@ -53,10 +53,11 @@ def create_tool_schema_auto_api(tool_name: str, description: str, parameters: An
     }
 
 class ToolAutoApi:
-    def __init__(self, config: ToolAutoApiConfig, params_decorator = lambda params: params) -> None:
+    def __init__(self, config: ToolAutoApiConfig, params_decorator = lambda params: params, endpoint_url_decorator = lambda params, endpoint_url: (params, endpoint_url)) -> None:
         self._next_allowed_epoch = 0.0
         self._config = config
         self._params_decorator = params_decorator
+        self._endpoint_url_decorator = endpoint_url_decorator
 
     async def call(self, params: dict[str, Any]) ->Any:
         if not isinstance(params, dict):
@@ -71,15 +72,17 @@ class ToolAutoApi:
                 wait_seconds=pre_wait_seconds,
             )
 
+        params, endpoint_url = self._endpoint_url_decorator(params, self._config.ENDPOINT_URL)
+
         payload = self._config.PAYLOAD_PROTOTYPE
         for key, value in self._params_decorator(params).items():
             payload[key] = value
 
-        log.http_request("POST", self._config.ENDPOINT_URL, payload)
+        log.http_request("POST", endpoint_url, payload)
 
         try:
             response = requests.post(
-                self._config.ENDPOINT_URL,
+                endpoint_url,
                 headers={"Content-Type": "application/json"},
                 json=payload,
                 timeout=self._config.REQUEST_TIMEOUT_SECONDS,
