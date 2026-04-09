@@ -33,7 +33,7 @@ def app_setup_arg_parser(app_description: str = "Generic AI agent app") -> argpa
         default=None,
         type=list[str],
         action="append",
-        help="List of server names from mcp config to use. Defaults to all available servers.",
+        help="List of server names from mcp config to use. Defaults to all available servers unless `mcp.disable-auto-load` file exists.",
     )
     parser.add_argument(
         "--mcp_config",
@@ -59,15 +59,19 @@ async def app_async_main(config: AgentConfig, args: argparse.Namespace, native_t
         mcp_tools_list: list[dict[str, Any]] = []
         native_tools_list: list[dict[str, Any]] = []
 
-        mcp_clients = McpClient.create_clients_from_config(config, args.mcp_config, args.server)
-        for server_name, mcp_client in mcp_clients.items():
-            log.start(f"Connecting to MCP server '{server_name}'...")
-            await mcp_client.connect()
-            mcp_tools = await mcp_client.list_tools()
-            mcp_tools_list.extend(mcp_tools)
-            log.success(
-                "MCP: " + ", ".join(tool["name"] for tool in mcp_tools) if mcp_tools else "MCP: no tools"
-            )
+        mcp_clients = {}
+        if Path(f"{config.PROJECT_ROOT}/mcp.disable-auto-load").exists() and not args.server:
+            log.info("MCP: Auto load of all servers is disabled")
+        else:
+            mcp_clients = McpClient.create_clients_from_config(config, args.mcp_config, args.server)
+            for server_name, mcp_client in mcp_clients.items():
+                log.start(f"Connecting to MCP server '{server_name}'...")
+                await mcp_client.connect()
+                mcp_tools = await mcp_client.list_tools()
+                mcp_tools_list.extend(mcp_tools)
+                log.success(
+                    "MCP: " + ", ".join(tool["name"] for tool in mcp_tools) if mcp_tools else "MCP: no tools"
+                )
 
         native_tools = native_tools_factory.create_native_tools(args)
         native_tools_list = native_tools.list_tools()

@@ -16,6 +16,37 @@ MCP_NS_SEPARATOR = "__"
 def get_default_mcp_config_path(project_root: Path):
     return project_root / "mcp.json"
 
+import os
+import re
+
+def substitute_env_vars(value: Any) -> Any:
+    """
+    Recursively substitute environment variables in config values.
+
+    Replaces patterns like "${VARNAME}" with os.getenv("VARNAME", "").
+    Handles strings, lists, dicts, and nested structures.
+
+    Args:
+        value: The value to process (can be str, list, dict, or any nested combination)
+
+    Returns:
+        The value with environment variables substituted
+    """
+    if isinstance(value, str):
+        # Replace ${VARNAME} patterns with environment variable values
+        def replace_var(match):
+            var_name = match.group(1)
+            return os.getenv(var_name, "")
+        return re.sub(r'\$\{([A-Za-z_][A-Za-z0-9_]*)\}', replace_var, value)
+
+    elif isinstance(value, list):
+        return [substitute_env_vars(item) for item in value]
+
+    elif isinstance(value, dict):
+        return {key: substitute_env_vars(val) for key, val in value.items()}
+
+    else:
+        return value
 class McpError(RuntimeError):
     # TODO: log errors
     pass
@@ -64,6 +95,15 @@ class McpClient:
 
         args = [str(arg) for arg in server_config.get("args", [])]
         env = {key: str(value) for key, value in server_config.get("env", {}).items()}
+
+        # Substitute environment variables in config values
+        command = str(substitute_env_vars(command))
+        cwd = str(substitute_env_vars(cwd))
+        args = [str(arg) for arg in substitute_env_vars(args)]
+        env = {key: str(value) for key, value in substitute_env_vars(env).items()}
+
+        # Also handle PROJECT_ROOT substitution after env var replacement
+        cwd = cwd.replace("${PROJECT_ROOT}", self._agent_config.PROJECT_ROOT.as_posix())
 
         log.info(f"Spawning MCP server: {self._server_name}")
         log.info(f"Command: {command} {' '.join(args)}")
