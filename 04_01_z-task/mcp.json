@@ -1,0 +1,20 @@
+{
+    "mcpServers": {
+        "playwright": {
+            "command": "npx",
+            "args": [
+                "@playwright/mcp@latest",
+                "--browser",
+                "chromium",
+                "--headless",
+                "--init-page=./init-page.ts"
+            ],
+            "env": {
+                "OKO_URL": "${OKO_URL}",
+                "OKO_USERNAME": "${OKO_USERNAME}",
+                "OKO_PASSWORD": "${OKO_PASSWORD}",
+                "OKO_ACCESS_KEY": "${OKO_ACCESS_KEY}"
+            }
+        }
+    }
+}

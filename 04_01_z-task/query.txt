@@ -1,0 +1,19 @@
+Use the available tools (`verify` and `fetch_html_body`) to perform all required updates in the OKO Operations Center.
+
+Goal:
+Apply the requested changes through the central API and finish with a successful completion call.
+
+Execution rules:
+1. Start by learning the API contract via `verify` with `action: "help"`.
+2. Use `fetch_html_body` and `verify` as needed to inspect the page state and perform updates.
+3. After making all changes, call `verify` with `action: "done"`.
+
+Required changes:
+1. Reclassify the report about the city of Skolwin so it is NOT a report about seen vehicles/people, but about animals.
+2. In the task list, find the task related to Skolwin, mark it as completed, and update its content to mention that animals were seen there (for example, beavers).
+3. Add an incident report that redirects operator attention to another uninhabited city: report detected human movement near Komarowo.
+
+Important:
+- Ensure all three modifications are reflected in the system before sending `done`.
+- Do not skip the initial `help` action.
+
