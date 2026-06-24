@@ -10,14 +10,22 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": "${command:pickArgs}"
+            "args": "${command:pickArgs}",
+            "env": {
+                "TASK_MODEL": "google/gemini-3-flash-preview"
+            }
         },
         {
             "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal"
+            "program": "app.py",
+            "cwd": "${workspaceFolder}/03_01_z-task",
+            "console": "integratedTerminal",
+            "args": "--query 'list all available tools'", //  "--query_file query.txt",
+            "env": {
+                "TASK_MODEL": "google/gemini-3-flash-preview"
+            }
         }
     ]
 }

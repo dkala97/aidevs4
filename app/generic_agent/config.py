@@ -12,16 +12,21 @@ class AgentConfig:
         self.PROJECT_ROOT=Path(project_root)
         self.INSTRUCTIONS=instructions
 
-        OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
-        OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "").strip()
         REQUESTED_PROVIDER = os.getenv("AI_PROVIDER", "").strip().lower()
+        
+        AI_API_KEYS = {
+            "openai": os.getenv("OPENAI_API_KEY", "").strip(),
+            "openrouter": os.getenv("OPENROUTER_API_KEY", "").strip(),
+            "lmstudio": os.getenv("LMSTUDIO_API_KEY", "").strip()
+        }
 
         RESPONSES_ENDPOINTS = {
             "openai": "https://api.openai.com/v1/responses",
             "openrouter": "https://openrouter.ai/api/v1/responses",
+            "lmstudio": "http://10.252.0.172:1234/v1/responses"
         }
 
-        VALID_PROVIDERS = {"openai", "openrouter"}
+        VALID_PROVIDERS = {"openai", "openrouter", "lmstudio"}
         OPENROUTER_ONLINE_SUFFIX = ":online"
 
 
@@ -30,26 +35,34 @@ class AgentConfig:
                 raise RuntimeError("AI_PROVIDER must be one of: openai, openrouter")
 
             if REQUESTED_PROVIDER == "openai":
-                if not OPENAI_API_KEY:
+                if not "openai" in AI_API_KEYS:
                     raise RuntimeError("AI_PROVIDER=openai requires OPENAI_API_KEY")
                 return REQUESTED_PROVIDER
 
             if REQUESTED_PROVIDER == "openrouter":
-                if not OPENROUTER_API_KEY:
+                if not "openrouter" in AI_API_KEYS:
                     raise RuntimeError("AI_PROVIDER=openrouter requires OPENROUTER_API_KEY")
                 return REQUESTED_PROVIDER
 
-            if OPENAI_API_KEY:
+            if REQUESTED_PROVIDER == "lmstudio":
+                if not "lmstudio" in AI_API_KEYS:
+                    raise RuntimeError("AI_PROVIDER=lmstudio requires LMSTUDIO_API_KEY")
+                return REQUESTED_PROVIDER
+
+            if "openai" in AI_API_KEYS:
                 return "openai"
 
-            if OPENROUTER_API_KEY:
+            if not "openrouter" in AI_API_KEYS:
                 return "openrouter"
+
+            if "lmstudio" in AI_API_KEYS:
+                return "lmstudio"
 
             raise RuntimeError("Missing AI API key. Set OPENAI_API_KEY or OPENROUTER_API_KEY in the repo root .env file.")
 
 
         AI_PROVIDER = _resolve_provider()
-        self.AI_API_KEY = OPENAI_API_KEY if AI_PROVIDER == "openai" else OPENROUTER_API_KEY
+        self.AI_API_KEY = AI_API_KEYS[AI_PROVIDER]
         self.RESPONSES_API_ENDPOINT = RESPONSES_ENDPOINTS[AI_PROVIDER]
 
         self.EXTRA_API_HEADERS: dict[str, str] = {}

@@ -1,0 +1,91 @@
+You are an AI agent tasked with configuring a wind turbine to provide power to a dying power plant. You have ONLY 40 SECONDS to complete this task, so efficiency is critical. Most API calls execute asynchronously, meaning you must parallelize your work.
+
+## OBJECTIVE
+Schedule the wind turbine to:
+1. Protect itself during storms (high wind speeds)
+2. Generate the required power in optimal weather conditions
+3. Submit the complete configuration within 40 seconds
+
+## TASK BREAKDOWN
+
+### Phase 1: Exploration & Data Collection (Start immediately with async calls)
+1. Call "help" action to understand available API endpoints
+2. Simultaneously invoke (in parallel):
+   - "getWeatherForecast" to analyze wind patterns and identify storm periods
+   - "getPowerRequirements" to learn what power is needed
+   - "getTurbineStatus" to check current turbine specifications and wind tolerance threshold
+
+3. Retrieve all results asynchronously as they complete using "getResult" action
+
+### Phase 2: Analysis & Configuration Planning
+From the weather forecast:
+- Identify all moments where wind speed EXCEEDS the turbine's tolerance threshold
+- Mark these as STORM PERIODS requiring protection
+- For storm protection:
+  * Set pitchAngle to 90 (horizontal blade position to resist wind)
+  * Set turbineMode to "idle"
+  
+From the power requirements:
+- Identify OPTIMAL POWER WINDOW: the first moment where weather allows generating the required power
+- For power generation:
+  * Calculate optimal pitchAngle (typically 0 or low angle for maximum wind capture)
+  * Set turbineMode to "production"
+
+Important: After each major storm, the turbine automatically returns to standard settings ~1 hour later. Account for this in your scheduling.
+
+### Phase 3: Generate Unlock Codes (Parallelize this!)
+For EACH configuration point you plan to submit:
+1. Call "unlockCodeGenerator" to generate the unlock code
+2. Store the code with its corresponding timestamp and configuration
+
+Execute all unlockCodeGenerator calls in parallel to save time.
+
+### Phase 4: Configuration Submission
+1. Prepare all configurations in batch format (timestamp -> config details)
+2. Send ALL configurations at once using the "config" action with the "configs" parameter
+3. Format: { "2026-03-24 20:00:00": { "pitchAngle": X, "turbineMode": "Y", "unlockCode": "Z" } }
+
+### Phase 5: Final Verification
+1. Execute "turbinecheck" action to verify turbine is ready
+2. Execute "done" action to finalize and retrieve the flag
+
+## CRITICAL TIMING RULES
+- Blade pitch angles are set in HOURS (minutes and seconds must be :00:00)
+- Each configuration sent must have a valid unlockCode from unlockCodeGenerator
+- You cannot use the same result twice - each retrieved report can only be fetched once
+- During strong winds: turbine cannot resist (pitch 90°) AND cannot produce power (idle mode only)
+- The 40-second limit is ABSOLUTE
+
+## EXECUTION STRATEGY
+1. Start the service window with "start" action
+2. Immediately fire off all async data requests (getWeatherForecast, getPowerRequirements, getTurbineStatus) in parallel
+3. While waiting for results, prepare your analysis framework
+4. As results arrive, begin identifying storm periods and optimal power generation windows
+5. Fire off all unlockCodeGenerator calls in parallel for all configurations needed
+6. Batch submit all configurations at once
+7. Execute turbinecheck and done sequentially
+
+Use sleep action only if necessary to wait for async results, but minimize delays.
+
+## RESPONSE FORMAT
+When calling the verify tool, provide the answer object in this format:
+{
+  "action": "ACTION_NAME",
+  "parameters": {...}
+}
+
+Examples:
+- Help: { "action": "help" }
+- Start: { "action": "start" }
+- Get weather: { "action": "getWeatherForecast" }
+- Submit config: { "action": "config", "configs": {...} }
+- Turbine check: { "action": "turbinecheck" }
+- Final: { "action": "done" }
+
+## SUCCESS CRITERIA
+- All storm periods are protected (pitch 90°, idle mode)
+- First optimal power generation window is identified and scheduled
+- All configurations have valid unlock codes
+- Turbine check passes
+- Configuration submitted within 40 seconds
+- Flag returned by "done" action
